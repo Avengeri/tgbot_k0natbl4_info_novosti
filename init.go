@@ -50,6 +50,7 @@ func initStorage(configFilePath string) (*Config, error) {
 	return &config, nil
 }
 
+// Инициализация Yandex погоды
 func initYandexWeather(envFilePath string) (yandexAPIWeather string, err error) {
 	err = godotenv.Load(envFilePath)
 	if err != nil {
@@ -65,6 +66,7 @@ func initYandexWeather(envFilePath string) (yandexAPIWeather string, err error) 
 	return yandexAPIWeather, nil
 }
 
+// Инициализация Yandex расписания
 func initYandexSchedule(envFilePath string) (yandexAPISchedule string, err error) {
 	err = godotenv.Load(envFilePath)
 	if err != nil {

@@ -331,6 +331,7 @@ func (w WeatherResponse) sendTemperatureToUserGeo(chatID int64, u *User) {
 
 }
 
+// Отправляет пользователю расписание электричек Всеволожск-Спб
 func sendScheduleToUserTodayVsSpb(u *User, s Suburban) {
 
 	yandexAPISchedule, err := initYandexSchedule("./go.env")
@@ -403,6 +404,7 @@ func sendScheduleToUserTodayVsSpb(u *User, s Suburban) {
 
 }
 
+// Отправляет пользователю расписание электричек Спб-Всеволожск
 func sendScheduleToUserTodaySpbVs(u *User, s Suburban) {
 
 	yandexAPISchedule, err := initYandexSchedule("./go.env")
@@ -475,6 +477,7 @@ func sendScheduleToUserTodaySpbVs(u *User, s Suburban) {
 	}
 }
 
+// Просит разрешить гео для использования погоды
 func (u *User) showAllowGeo() {
 	msg := tgbotapi.NewMessage(u.chatId, "Пожалуйста сначала разрешите использовать свою геопозицию в настройках приложения")
 
