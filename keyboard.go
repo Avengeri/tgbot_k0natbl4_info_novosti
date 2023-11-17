@@ -4,7 +4,9 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"log"
+	"strings"
 	"tgbot_k0natbl4_info_novosti/constans"
+	"time"
 )
 
 // Отправляет картинку
@@ -106,10 +108,27 @@ func (u *User) showServices() {
 
 	replyRow := newKeyboardRow(constans.BUTTON_REPLY_TEXT_NEWS)
 	replyRow_2 := newKeyboardRow(constans.BUTTON_REPLY_TEXT_WEATHER)
-	replyRow_3 := newKeyboardRow(constans.BUTTON_REPLY_TEXT_DOLLAR)
-	replyRow_4 := newKeyboardRow(constans.BUTTON_REPLY_TEXT_BACK)
+	replyRow_3 := newKeyboardRow(constans.BUTTON_REPLY_TEXT_SCHEDULE)
+	replyRow_4 := newKeyboardRow(constans.BUTTON_REPLY_TEXT_BACK_TO_MENU)
 
 	replyKeyboard := tgbotapi.NewReplyKeyboard(replyRow, replyRow_2, replyRow_3, replyRow_4)
+
+	msg.ReplyMarkup = replyKeyboard
+
+	_, err := gBot.Send(msg)
+	if err != nil {
+		log.Printf("Не удалось отправить сообщение")
+	}
+}
+
+func (u *User) showSchedule() {
+	msg := tgbotapi.NewMessage(u.chatId, "Когда электричка нннада?")
+
+	replyRow := newKeyboardRow(constans.BUTTON_REPLY_TEXT_SCHEDULE_TODAY_SPB_VS)
+	replyRow_2 := newKeyboardRow(constans.BUTTON_REPLY_TEXT_SCHEDULE_TODAY_VS_SPB)
+	replyRow_3 := newKeyboardRow(constans.BUTTON_REPLY_TEXT_BACK_TO_SERVICES)
+
+	replyKeyboard := tgbotapi.NewReplyKeyboard(replyRow, replyRow_2, replyRow_3)
 
 	msg.ReplyMarkup = replyKeyboard
 
@@ -150,9 +169,8 @@ func (u *User) showWeatherChoose() {
 
 	replyRow := newKeyboardRow(constans.BUTTON_REPLY_TEXT_WEATHER_SAINT_PETERSBURG)
 	replyRow_2 := newKeyboardRow(constans.BUTTON_REPLY_TEXT_WEATHER_GEO)
-	replyRow_3 := newKeyboardRow(constans.BUTTON_REPLY_TEXT_ALLOW_GEO)
-	replyRow_4 := newKeyboardRow(constans.BUTTON_REPLY_TEXT_BACK)
-	replyKeyboard := tgbotapi.NewReplyKeyboard(replyRow, replyRow_2, replyRow_3, replyRow_4)
+	replyRow_4 := newKeyboardRow(constans.BUTTON_REPLY_TEXT_BACK_TO_SERVICES)
+	replyKeyboard := tgbotapi.NewReplyKeyboard(replyRow, replyRow_2, replyRow_4)
 
 	msg.ReplyMarkup = replyKeyboard
 
@@ -167,14 +185,14 @@ func (u *User) allowGeoButton(update *tgbotapi.Update) {
 	locationButton := tgbotapi.NewKeyboardButton(constans.BUTTON_REPLY_TEXT_SEND_GEO)
 	locationButton.RequestLocation = true
 
-	menuButton := tgbotapi.NewKeyboardButton(constans.BUTTON_REPLY_TEXT_BACK)
+	menuButton := tgbotapi.NewKeyboardButton(constans.BUTTON_REPLY_TEXT_BACK_TO_WEATHER)
 
 	keyboard := tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(locationButton),
 		tgbotapi.NewKeyboardButtonRow(menuButton),
 	)
 
-	msg := tgbotapi.NewMessage(u.chatId, "Пожалуйста поделитесь геопозицией")
+	msg := tgbotapi.NewMessage(u.chatId, "Пожалуйста поделитесь геопозицией, если хотите получить актуальные данные погоды рядом с Вами. Убедитесь, что у приложения есть доступ к геопозиции, иначе мы не сможем обновить данные о погоде!")
 	msg.ReplyMarkup = keyboard
 
 	_, err := gBot.Send(msg)
@@ -274,12 +292,13 @@ func (w WeatherResponse) sendTemperatureToUser(chatID int64, u *User) {
 // Отправляет погоду пользователю по гео
 func (w WeatherResponse) sendTemperatureToUserGeo(chatID int64, u *User) {
 
-	if u.latitude > 0 {
+	if u.latitude != 0 && u.longitude != 0 {
 
 		err := w.handlerWeatherGeo(u)
 		if err != nil {
 			fmt.Println("Не удалось получить значение температуры")
 		} else {
+
 			plusWeather := ""
 			if w.Fact.Temperature > 0 {
 				plusWeather = "+"
@@ -296,7 +315,7 @@ func (w WeatherResponse) sendTemperatureToUserGeo(chatID int64, u *User) {
 				weather = "дождь со снегом"
 			}
 
-			msg := fmt.Sprintf("Ваше местоположение:%s, %s, %s, %s\nПогода: %s%d°\nОщущается как: %s%d°\nСейчас: %s\nСкорость ветра: %d м/с\nДавление: %d мм рт. ст.\nВлажность воздуха: %d%%",
+			msg := fmt.Sprintf("Ваше местоположение: %s, %s, %s, %s\nПогода: %s%d°\nОщущается как: %s%d°\nСейчас: %s\nСкорость ветра: %d м/с\nДавление: %d мм рт. ст.\nВлажность воздуха: %d%%",
 				w.GeoObject.District.NameDistrict, w.GeoObject.Locality.NameLocality, w.GeoObject.Country.NameCountry, w.GeoObject.Province.NameProvince, plusWeather, w.Fact.Temperature, plusFeelsLike, w.Fact.FeelsLike, weather, w.Fact.WindSpeed, w.Fact.Pressure, w.Fact.Humidity)
 
 			resultMessage := tgbotapi.NewMessage(chatID, msg)
@@ -312,8 +331,155 @@ func (w WeatherResponse) sendTemperatureToUserGeo(chatID int64, u *User) {
 
 }
 
+// Отправляет пользователю расписание электричек Всеволожск-Спб
+func sendScheduleToUserTodayVsSpb(u *User, s Suburban) {
+
+	yandexAPISchedule, err := initYandexSchedule("./go.env")
+	if err != nil {
+		log.Println("Ошибка инициализации yandex_api")
+	}
+
+	now := time.Now()
+	year := now.Year()
+	month := now.Month()
+	day := now.Day()
+
+	url := fmt.Sprintf("https://api.rasp.yandex.net/v3.0/search/?apikey=%s&format=json&&date=%04d-%02d-%02d&from=c10865&to=s9602497&lang=ru_RU&page=1", yandexAPISchedule, year, month, day)
+
+	err = s.handlerSuburban(url)
+	if err != nil {
+		fmt.Println("Не удалось получить расписание")
+	}
+
+	var messageText strings.Builder
+	var messages []string
+
+	for _, train := range Schedule {
+
+		departureStr := train.Departure
+		arrivalStr := train.Arrival
+
+		departureTime, err := time.Parse(time.RFC3339, departureStr)
+		if err != nil {
+			fmt.Println("Ошибка парсинга времени отправления:", err)
+			continue
+		}
+		if departureTime.Before(now) {
+			continue
+		}
+
+		arrivalTime, err := time.Parse(time.RFC3339, arrivalStr)
+		if err != nil {
+			fmt.Println("Ошибка парсинга времени прибытия:", err)
+			continue
+		}
+		if arrivalTime.Before(now) {
+			continue
+		}
+
+		formattedDeparture := fmt.Sprintf("%02d.%d.%dг. в %s", departureTime.Day(), int(departureTime.Month()), departureTime.Year(), departureTime.Format("15:04"))
+		formattedArrival := fmt.Sprintf("%02d.%d.%dг. в %s", arrivalTime.Day(), int(arrivalTime.Month()), arrivalTime.Year(), arrivalTime.Format("15:04"))
+
+		msg := fmt.Sprintf("Номер электрички: %s\nНаправление: %s\nОткуда: %s\nКуда: %s\nДата отправления: %s\nДата прибытия: %s\n",
+			train.Thread.Number, train.Thread.Title, train.From.Title, train.To.Title, formattedDeparture, formattedArrival)
+		if messageText.Len()+len(msg) > constans.MAX_MESSAGE_LENGHT {
+			messages = append(messages, messageText.String())
+			messageText.Reset()
+		}
+
+		messageText.WriteString(msg)
+		messageText.WriteString("\n\n")
+	}
+	if messageText.Len() > 0 {
+		messages = append(messages, messageText.String())
+	}
+	for _, msgText := range messages {
+		message := tgbotapi.NewMessage(u.chatId, msgText)
+
+		_, err = gBot.Send(message)
+		if err != nil {
+			log.Printf("Не удалось отправить сообщение")
+		}
+	}
+
+}
+
+// Отправляет пользователю расписание электричек Спб-Всеволожск
+func sendScheduleToUserTodaySpbVs(u *User, s Suburban) {
+
+	yandexAPISchedule, err := initYandexSchedule("./go.env")
+	if err != nil {
+		log.Println("Ошибка инициализации yandex_api")
+	}
+
+	now := time.Now()
+	year := now.Year()
+	month := now.Month()
+	day := now.Day()
+
+	url := fmt.Sprintf("https://api.rasp.yandex.net/v3.0/search/?apikey=%s&format=json&&date=%04d-%02d-%02d&from=s9602497&to=c10865&lang=ru_RU&page=1&", yandexAPISchedule, year, month, day)
+
+	err = s.handlerSuburban(url)
+	if err != nil {
+		fmt.Println("Не удалось получить расписание")
+	}
+
+	var messageText strings.Builder
+	var messages []string
+
+	for _, train := range Schedule {
+
+		departureStr := train.Departure
+		arrivalStr := train.Arrival
+
+		departureTime, err := time.Parse(time.RFC3339, departureStr)
+		if err != nil {
+			fmt.Println("Ошибка парсинга времени отправления:", err)
+			continue
+		}
+		if departureTime.Before(now) {
+			continue
+		}
+
+		arrivalTime, err := time.Parse(time.RFC3339, arrivalStr)
+		if err != nil {
+			fmt.Println("Ошибка парсинга времени прибытия:", err)
+			continue
+		}
+		if arrivalTime.Before(now) {
+			continue
+		}
+
+		formattedDeparture := fmt.Sprintf("%02d.%d.%dг. в %s", departureTime.Day(), int(departureTime.Month()), departureTime.Year(), departureTime.Format("15:04"))
+		formattedArrival := fmt.Sprintf("%02d.%d.%dг. в %s", arrivalTime.Day(), int(arrivalTime.Month()), arrivalTime.Year(), arrivalTime.Format("15:04"))
+
+		msg := fmt.Sprintf("Номер электрички: %s\nНаправление: %s\nОткуда: %s\nКуда: %s\nДата отправления: %s\nДата прибытия: %s\n",
+			train.Thread.Number, train.Thread.Title, train.From.Title, train.To.Title, formattedDeparture, formattedArrival)
+
+		if messageText.Len()+len(msg) > constans.MAX_MESSAGE_LENGHT {
+			messages = append(messages, messageText.String())
+			messageText.Reset()
+		}
+
+		messageText.WriteString(msg)
+		messageText.WriteString("\n\n")
+	}
+	if messageText.Len() > 0 {
+		messages = append(messages, messageText.String())
+	}
+	for _, msgText := range messages {
+		message := tgbotapi.NewMessage(u.chatId, msgText)
+
+		_, err = gBot.Send(message)
+		if err != nil {
+			log.Printf("Не удалось отправить сообщение")
+		}
+	}
+}
+
+// Просит разрешить гео для использования погоды
 func (u *User) showAllowGeo() {
-	msg := tgbotapi.NewMessage(u.chatId, "Пожалуйста сначала разрешите использовать свою геопозицию (кнопка внизу). Если это не сработало, разрешено ли использовать приложению геопозицию")
+	msg := tgbotapi.NewMessage(u.chatId, "Пожалуйста сначала разрешите использовать свою геопозицию в настройках приложения")
 
 	_, err := gBot.Send(msg)
 	if err != nil {

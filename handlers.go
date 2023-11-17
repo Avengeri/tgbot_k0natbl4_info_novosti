@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-// Обрабатывает запрос и возвращает ответ в структуру
+// Обрабатывает запрос погоды в СПБ и возвращает ответ в структуру
 func (w *WeatherResponse) handlerWeather(u *User) error {
 
 	yandexApi, err := initYandexWeather("./go.env")
@@ -34,6 +34,7 @@ func (w *WeatherResponse) handlerWeather(u *User) error {
 	return nil
 }
 
+// Обрабатывает запрос погоды по ГЕО и возвращает ответ в структуру
 func (w *WeatherResponse) handlerWeatherGeo(u *User) error {
 
 	yandexApi, err := initYandexWeather("./go.env")
@@ -57,6 +58,25 @@ func (w *WeatherResponse) handlerWeatherGeo(u *User) error {
 	if err != nil {
 		log.Println("Ошибка декодирования json файла")
 	}
+	return nil
+}
+
+// Обрабатывает запрос расписания электричек и возвращает ответ в структуру
+func (s *Suburban) handlerSuburban(url string) error {
+
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Println("Ошибка получения гет запроса")
+	}
+	defer resp.Body.Close() // как-то обработать ошибку
+
+	var response SuburbanResponse
+	decoder := json.NewDecoder(resp.Body)
+	if err := decoder.Decode(&response); err != nil {
+		log.Println("Ошибка декодирования JSON:", err)
+	}
+
+	Schedule = response.Segments
 	return nil
 }
 

@@ -10,7 +10,7 @@ import (
 )
 
 // Обработчик текстовых запросов + генератор новой клавиатуры + отправляет
-func (u *User) processKeyboardForText(update *tgbotapi.Update, w WeatherResponse) {
+func (u *User) processKeyboardForText(update *tgbotapi.Update, w WeatherResponse, s Suburban) {
 	if update.Message == nil {
 		return
 	}
@@ -19,8 +19,8 @@ func (u *User) processKeyboardForText(update *tgbotapi.Update, w WeatherResponse
 
 	case constans.BUTTON_REPLY_TEXT_SERVICES:
 		u.showServices()
-	case constans.BUTTON_REPLY_TEXT_BACK:
-		u.showKeyboardMenuWithoutButton()
+	case constans.BUTTON_REPLY_TEXT_BACK_TO_SERVICES:
+		u.showServices()
 	case constans.BUTTON_REPLY_TEXT_ABOUT_ME:
 		u.showInfoAboutMe()
 	case constans.BUTTON_REPLY_TEXT_WANT_BUTTON:
@@ -34,18 +34,27 @@ func (u *User) processKeyboardForText(update *tgbotapi.Update, w WeatherResponse
 	case constans.BUTTON_REPLY_TEXT_WEATHER_SAINT_PETERSBURG:
 		w.sendTemperatureToUser(u.chatId, u)
 	case constans.BUTTON_REPLY_TEXT_WEATHER_GEO:
-		w.sendTemperatureToUserGeo(u.chatId, u)
+		u.allowGeoButton(update)
 	case constans.BUTTON_REPLY_TEXT_NEWS:
 		u.showNews()
-	case constans.BUTTON_REPLY_TEXT_ALLOW_GEO:
-		u.allowGeoButton(update)
+	case constans.BUTTON_REPLY_TEXT_BACK_TO_MENU:
+		u.showKeyboardMenuWithoutButton()
+	case constans.BUTTON_REPLY_TEXT_BACK_TO_WEATHER:
+		u.showWeatherChoose()
+	case constans.BUTTON_REPLY_TEXT_SCHEDULE:
+		u.showSchedule()
+	case constans.BUTTON_REPLY_TEXT_SCHEDULE_TODAY_VS_SPB:
+		sendScheduleToUserTodayVsSpb(u, Suburban{})
+	case constans.BUTTON_REPLY_TEXT_SCHEDULE_TODAY_SPB_VS:
+		sendScheduleToUserTodaySpbVs(u, Suburban{})
 	default:
+
 		tgbotapi.NewReplyKeyboard()
 	}
 }
 
 // Обработчик call back запросов
-func (u *User) processUpdatingCallBack(update *tgbotapi.Update, ctx context.Context, pool *pgxpool.Pool, w WeatherResponse) {
+func (u *User) processUpdatingCallBack(update *tgbotapi.Update, ctx context.Context, pool *pgxpool.Pool) {
 	if update.CallbackQuery == nil {
 		return
 	}

@@ -101,7 +101,7 @@ func main() {
 			log.Println(user)
 
 			if update.Message.Text != "" {
-				user.processKeyboardForText(&update, WeatherResponse{})
+				user.processKeyboardForText(&update, WeatherResponse{}, Suburban{})
 
 			} else {
 				user.latitude = update.Message.Location.Latitude
@@ -118,33 +118,40 @@ func main() {
 				if err != nil {
 					log.Printf("Не удалось выполнить обновление в базе данных: %v", err)
 
-					msg := tgbotapi.NewMessage(user.chatId, "Спасибо за геолокацию, теперь попробуйте проверить температуру рядом с собой")
+				}
+
+				if user.latitude != 0 && user.longitude != 0 {
+					w := WeatherResponse{}
+					w.sendTemperatureToUserGeo(user.chatId, user)
+				} else {
+					msg := tgbotapi.NewMessage(user.chatId, "Не удалось получить данные о Вашей геопозиции. Пожалуйста проверьте настройки приложения")
 					_, err := gBot.Send(msg)
 					if err != nil {
 						log.Printf("Не удалось отправить сообщение")
 					}
 				}
 			}
+
 		case isCallBackQuery(&update):
 			user, err := fetchСallBackUser(ctx, pool, update)
 			if err != nil {
 				log.Printf("Ошибка при получении информации о пользователе: %v", err)
 				return
 			}
-			user.processUpdatingCallBack(&update, ctx, pool, WeatherResponse{})
+			user.processUpdatingCallBack(&update, ctx, pool)
 
-		case isUseGeo(&update):
-			user, err := fetchСallBackUser(ctx, pool, update)
-			if err != nil {
-				log.Printf("Ошибка при получении информации о пользователе: %v", err)
-				return
-			}
-			msg := tgbotapi.NewMessage(user.chatId, "Геопозиция получена, можете попробовать посмотреть температуру рядом с собой")
-			_, err = gBot.Send(msg)
-			if err != nil {
-				log.Printf("Не удалось отправить сообщение")
-			}
-			user.processKeyboardForText(&update, WeatherResponse{})
+			//case isUseGeo(&update):
+			//	user, err := fetchСallBackUser(ctx, pool, update)
+			//	if err != nil {
+			//		log.Printf("Ошибка при получении информации о пользователе: %v", err)
+			//		return
+			//	}
+			//	msg := tgbotapi.NewMessage(user.chatId, "Геопозиция получена, можете попробовать посмотреть температуру рядом с собой")
+			//	_, err = gBot.Send(msg)
+			//	if err != nil {
+			//		log.Printf("Не удалось отправить сообщение")
+			//	}
+			//	user.processKeyboardForText(&update, WeatherResponse{})
 		}
 
 	}

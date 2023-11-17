@@ -29,10 +29,15 @@ const (
 	BUTTON_REPLY_TEXT_WEATHER                  = EMOJI_SUN + " " + "Узнать погоду"
 	BUTTON_REPLY_TEXT_WEATHER_SAINT_PETERSBURG = EMOJI_SUN + " " + "Узнать погоду в СПб -100" + " " + EMOJI_COIN
 	BUTTON_REPLY_TEXT_WEATHER_GEO              = EMOJI_SUN + " " + "Узнать погоду рядом со мной -100" + " " + EMOJI_COIN
-	BUTTON_REPLY_TEXT_DOLLAR                   = EMOJI_DOLLAR + " " + "Узнать курс доллара -100(в разработке)" + " " + EMOJI_COIN
+	BUTTON_REPLY_TEXT_SCHEDULE                 = EMOJI_DOLLAR + " " + "Узнать расписание электричек"
+	BUTTON_REPLY_TEXT_SCHEDULE_TODAY_VS_SPB    = "Сегодня (Всеволожск-СПб/в будущем)"
+	BUTTON_REPLY_TEXT_SCHEDULE_TODAY_SPB_VS    = "Сегодня (СПб-Всеволожск/в будущем)"
 	BUTTON_REPLY_TEXT_NEWS                     = EMOJI_NEWS + " " + "Показать новости"
 	BUTTON_REPLY_TEXT_ALLOW_GEO                = EMOJI_SUNGLASSES + " " + "Разрешить использовать геопозицию"
 	BUTTON_REPLY_TEXT_SEND_GEO                 = "Отправить геопозицию"
+	BUTTON_REPLY_TEXT_BACK_TO_SERVICES         = EMOJI_GO_BACK_MENU + " " + "НАЗАД К УСЛУГАМ"
+	BUTTON_REPLY_TEXT_BACK_TO_MENU             = EMOJI_GO_BACK_MENU + " " + "ВЕРНУТЬСЯ В МЕНЮ"
+	BUTTON_REPLY_TEXT_BACK_TO_WEATHER          = EMOJI_GO_BACK_MENU + " " + "НАЗАД К ПОГОДЕ"
 
 	BUTTON_INLINE_TEXT_ACCOUNT_MANAGEMENT_SHOW_MONEY  = EMOJI_COIN + " " + "Показать баланс"
 	BUTTON_INLINE_TEXT_ACCOUNT_MANAGEMENT_BUY_MONEY   = EMOJI_COIN + " " + "Пополнить баланс +100"
@@ -56,4 +61,5 @@ const (
 	BUTTON_INLINE_CODE_NEWS_ANIMALS                   = "show_news_animal"
 
 	UPDATE_CONFIG_TIMEOUT = 60
+	MAX_MESSAGE_LENGHT    = 4000
 )

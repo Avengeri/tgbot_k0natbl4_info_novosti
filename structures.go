@@ -31,8 +31,7 @@ type User struct {
 	longitude   float64
 }
 
-//Структура для информации о погоде
-
+// Структура для информации о погоде
 type WeatherResponse struct {
 	Fact struct {
 		Temperature int64  `json:"temp"`
@@ -60,4 +59,29 @@ type WeatherResponse struct {
 			NameCountry string `json:"name"`
 		} `json:"country"`
 	} `json:"geo_object"`
+}
+
+// Сюда декодируется json из расписания, тк ответ содержит несколько расписаний
+type SuburbanResponse struct {
+	Segments []Suburban `json:"segments"`
+}
+
+// Слайс куда перезапишутся данные из другой структуры после ее декодирования
+var Schedule []Suburban
+
+// Структура расписания
+type Suburban struct {
+	Thread struct {
+		Number string `json:"number"` // Номер электрички
+		Title  string `json:"title"`  // Откуда-куда (общее направление)
+	} `json:"thread"`
+	From struct {
+		Title string `json:"title"` // Откуда (название станции)
+	} `json:"from"`
+	To struct {
+		Title string `json:"title"` // Куда(название станции)
+	} `json:"to"`
+	Departure string `json:"departure"` // Дата отправления
+	Arrival   string `json:"arrival"`   // Дата прибытия
+
 }
