@@ -60,6 +60,24 @@ func (w *WeatherResponse) handlerWeatherGeo(u *User) error {
 	return nil
 }
 
+func (s *Suburban) handlerSuburban(url string) error {
+
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Println("Ошибка получения гет запроса")
+	}
+	defer resp.Body.Close() // как-то обработать ошибку
+
+	var response SuburbanResponse
+	decoder := json.NewDecoder(resp.Body)
+	if err := decoder.Decode(&response); err != nil {
+		log.Println("Ошибка декодирования JSON:", err)
+	}
+
+	Schedule = response.Segments
+	return nil
+}
+
 //func (u *User) handleMessage(update tgbotapi.Update) *User {
 //	if update.Message != nil {
 //		userID := update.Message.From.ID

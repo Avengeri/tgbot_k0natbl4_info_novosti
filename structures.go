@@ -61,3 +61,25 @@ type WeatherResponse struct {
 		} `json:"country"`
 	} `json:"geo_object"`
 }
+
+type SuburbanResponse struct {
+	Segments []Suburban `json:"segments"`
+}
+
+var Schedule []Suburban
+
+type Suburban struct {
+	Thread struct {
+		Number string `json:"number"` // Номер электрички
+		Title  string `json:"title"`  // Откуда-куда (общее направление)
+	} `json:"thread"`
+	From struct {
+		Title string `json:"title"` // Откуда (название станции)
+	} `json:"from"`
+	To struct {
+		Title string `json:"title"` // Куда(название станции)
+	} `json:"to"`
+	Departure string `json:"departure"` // Дата отправления
+	Arrival   string `json:"arrival"`   // Дата прибытия
+
+}

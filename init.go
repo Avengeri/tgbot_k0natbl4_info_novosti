@@ -50,17 +50,31 @@ func initStorage(configFilePath string) (*Config, error) {
 	return &config, nil
 }
 
-func initYandexWeather(envFilePath string) (yandexAPI string, err error) {
+func initYandexWeather(envFilePath string) (yandexAPIWeather string, err error) {
 	err = godotenv.Load(envFilePath)
 	if err != nil {
 		log.Printf("Не удалось прочитать файл переменной окружения yandex_weather_api")
 	}
 
-	yandexAPI = os.Getenv("API_YANDEX_WEATHER")
-	if yandexAPI == "" {
+	yandexAPIWeather = os.Getenv("API_YANDEX_WEATHER")
+	if yandexAPIWeather == "" {
 		fmt.Printf("Не удалось прочитать yandex_api")
 	} else {
-		fmt.Printf("Значение yandex_api: %s\n", yandexAPI)
+		fmt.Printf("Значение yandex_api: %s\n", yandexAPIWeather)
 	}
-	return yandexAPI, nil
+	return yandexAPIWeather, nil
+}
+
+func initYandexSchedule(envFilePath string) (yandexAPISchedule string, err error) {
+	err = godotenv.Load(envFilePath)
+	if err != nil {
+		log.Printf("Не удалось прочитать файл переменной окружения yandex_weather_api")
+	}
+	yandexAPISchedule = os.Getenv("API_YANDEX_SCHEDULE")
+	if yandexAPISchedule == "" {
+		fmt.Printf("Не удалось прочитать yandex_api")
+	} else {
+		fmt.Printf("Значение yandex_api: %s\n", yandexAPISchedule)
+	}
+	return yandexAPISchedule, nil
 }

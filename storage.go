@@ -59,11 +59,12 @@ func fetchUser(ctx context.Context, pool *pgxpool.Pool, update tgbotapi.Update) 
 	return &user, nil
 }
 
+// Получение информации о пользователе из БД через callback
 func fetchСallBackUser(ctx context.Context, pool *pgxpool.Pool, update tgbotapi.Update) (*User, error) {
 	user := User{}
 	chatID := update.CallbackQuery.Message.Chat.ID
 	row := pool.QueryRow(ctx, "SELECT user_name, money,latitude,longitude FROM tg_users WHERE chat_id = $1", chatID)
-	err := row.Scan(&user.userName, &user.money)
+	err := row.Scan(&user.userName, &user.money, &user.latitude, &user.longitude)
 	if err != nil {
 		return nil, err
 	}
